@@ -2,9 +2,7 @@
 
 # temperature_conversions.py
 
-from typing import Union
-
-ValueLike = Union[int, float]
+from temperature_converter.aliases import ValueLike
 
 
 class TemperatureConverter:

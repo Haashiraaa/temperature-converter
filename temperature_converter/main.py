@@ -1,61 +1,78 @@
 
+
+# temperature_converter/main.py
+
 import logging
+import sys
+from typing import Optional, Dict
 from haashi_pkg.utility import Logger, ScreenUtil as su
-from typing import Optional, Union
-    
+from temperature_converter.validations import (
+    validate_unit, validate_value, validate_route, validate_guide_response
+)
+from temperature_converter.guide import guide
+
+unit_symbols: Dict[str, str] = {"k": "K", "c": "°C", "f": "°F"}
+
+
 def main(logger: Optional[Logger] = None) -> None:
-    
+
     logger = logger or Logger(logging.INFO)
+
+    su.space()
+    logger.info("Hello! Welcome to the Temperature Converter!")
+    logger.info("This program will help you with temperature conversions.")
+    su.space()
+
+    logger.info("Would you like to see the guide? (y/n)")
+    view_guide = validate_guide_response(input(">>> "))
+
+    if view_guide is True:
+        su.space()
+        guide()
+        su.space()
+
+    su.wait_and_enter()
 
     while True:
         su.clear_screen()
+        su.space()
         logger.info("Temp Converter")
+        su.space()
 
-        unit = validate_unit(input("Unit: "), logger)
-        if unit is None continue else pass
-        
-        value = validate_value(input("Value: "), logger)
-        if value is None continue else pass
-        
-        _unit = validate_unit(input("Convert to: "), logger)
-        if _unit is None continue else pass
+        try:
+            unit = validate_unit(input("Unit: "), logger)
+            if unit is None:
+                continue
 
+            value = validate_value(input("Value: "), logger)
+            if value is None:
+                continue
 
+            _unit = validate_unit(input("Convert to: "), logger)
+            if _unit is None:
+                continue
 
-    
-def validate_unit(unit: Optional[str] = None, logger: Optional[Logger] = None) -> Optional[str]:
-    
-    if not unit:
-        logger.warning("Unit field cannot be empty!")
-        su.wait_and_enter()
-        return
+            func = validate_route(unit, _unit, logger)
+            if func is None:
+                continue
 
-    if unit not in ["c", "k", "f",]:
-        logger.warning(f"Value: ({unit}) is invalid!")
-        su.wait_and_enter()
-        return
+            converted_value = func(value)
 
-    return unit.lower().strip()
+            su.space()
+            logger.info(f"Result = {converted_value}{unit_symbols[_unit]}")
+            su.wait_and_enter()
 
+        except KeyboardInterrupt:
+            su.space()
+            logger.info("Program interrupted!")
+            sys.exit(0)
 
-def validate_value(value: Optional[str] = None, logger: Optional[Logger] = None) -> Optional(Union[float, int]):
-
-    if not value:
-        logger.warning("Value field cannot be empty!")
-        su.wait_and_enter()
-        return
-
-    try:
-        if float(value).is_integer():
-            return int(value)
-        
-        return float(value)
-
-    except ValueError:
-        logger.warning(f"Value: ({value}) is not a valid integer or float!")
-        su.wait_and_enter()
-        return
-
-    
+        except Exception as e:
+            su.space()
+            logger.error(f"Error: {e}")
+            logger.error(exception=e, save_to_json=True)
+            sys.exit(1)
 
 
+if __name__ == "__main__":
+    main()
